@@ -1,14 +1,17 @@
-import { AddDownloadData, DownloadData, DownloadStatus } from "@/@types";
-import { ITorrentGameData } from "@/@types/torrent";
+import {
+  AddDownloadData,
+  DownloadData,
+  DownloadgameData,
+  DownloadStatus,
+} from "@/@types";
 import { createWriteStream, WriteStream } from "node:fs";
 import path from "node:path";
 import { logger } from "../../handlers/logging";
 import window from "../../utils/window";
 import { constants } from "../constants";
 import { settings } from "../settings/settings";
+import { sanitizeFilename } from "../utils";
 import download_events from "./events";
-
-const win = window?.window;
 
 class DownloadItem {
   id: string;
@@ -25,21 +28,47 @@ class DownloadItem {
   progressIntervalId?: ReturnType<typeof setInterval>;
   private fileStream?: WriteStream;
 
-  game_data: ITorrentGameData;
+  game_data: DownloadgameData;
 
   constructor(data: AddDownloadData) {
     const { file_path, game_data, url, file_name, id, file_extension } = data;
+
     this.id = id;
-    this.url = url;
-    this.filename = file_name;
-    this.status = "pending";
+    this.url = this.validateUrl(url);
+    this.filename = this.validateFilename(file_name);
     this.fileExtension = file_extension ?? this.getFileExtension(url);
-    this.filePath = file_path ?? this.getDownloadPath();
+    this.filePath = this.validateFilePath(file_path) ?? this.getDownloadPath();
+    this.status = "pending";
     this.game_data = game_data;
   }
 
+  private validateUrl(url: string): string {
+    try {
+      new URL(url); // Validate URL format
+      return url;
+    } catch {
+      throw new Error(`Invalid URL provided: ${url}`);
+    }
+  }
+
+  private validateFilename(filename: string): string {
+    return sanitizeFilename(filename);
+  }
+
+  private validateFilePath(filePath?: string): string | undefined {
+    if (!filePath) return undefined;
+    const resolvedPath = path.resolve(filePath);
+    if (!resolvedPath.startsWith(constants.downloadsPath)) {
+      throw new Error(`File path outside allowed directory: ${filePath}`);
+    }
+    return resolvedPath;
+  }
+
   private getFileExtension(url: string): string {
-    return url?.split(".")?.pop() ?? "rar";
+    const fileExtFromUrl = url.split(".").pop();
+    if (fileExtFromUrl && fileExtFromUrl?.length >= 1)
+      return fileExtFromUrl.toLowerCase();
+    return "rar";
   }
 
   private getDownloadPath(): string {
@@ -72,6 +101,7 @@ class DownloadItem {
 
   public setError(error: string): void {
     this.error = error;
+    logger.log("error", `[Download ${this.id}] ${error}`);
   }
 
   public createFileStream(): WriteStream | undefined {
@@ -79,23 +109,21 @@ class DownloadItem {
       this.fileStream = createWriteStream(this.fullPath);
       return this.fileStream;
     } catch (error) {
-      console.error(
-        `Failed to create file stream for ${this.fullPath}:`,
-        error
-      );
-      this.setError("Failed to create file stream.");
-
-      logger.log(
-        "error",
-        `Failed to create file stream for ${this.fullPath}: ${(error as Error).message}`
-      );
-
+      const message = `Failed to create file stream for ${this.fullPath}: ${(error as Error).message}`;
+      this.setError(message);
       return undefined;
     }
   }
 
   public closeFileStream(): void {
-    this.fileStream?.close();
+    try {
+      this.fileStream?.close();
+    } catch (error) {
+      logger.log(
+        "warn",
+        `Error closing file stream: ${(error as Error).message}`
+      );
+    }
   }
 
   public isCompleted(): boolean {
@@ -124,7 +152,7 @@ class DownloadItem {
     }
 
     const progressData = this.getReturnData();
-    win?.webContents?.send(download_events.progress, progressData);
+    window.emitToFrontend(download_events.progress, progressData);
   }
 }
 
