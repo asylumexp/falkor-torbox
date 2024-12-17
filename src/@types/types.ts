@@ -147,3 +147,25 @@ export interface Response<T = any> {
   error: boolean;
   data: T | null;
 }
+
+export type Cracker =
+  | "codex"
+  | "rune"
+  | "onlinefix"
+  | "goldberg"
+  | "rld"
+  | "empress"
+  | "skidrow"
+  | "creamapi"
+  | "smartsteamemu"
+  | "flt"
+  | "razor1911"
+  | "rle"
+  | "_3dm";
+
+export interface UnlockedAchievement {
+  name: string;
+  unlockTime: number;
+}
+
+export type NotificationType = "download_completed" | "achievement_unlocked";

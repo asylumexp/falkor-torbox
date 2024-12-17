@@ -7,10 +7,9 @@ import {
 import { createWriteStream, WriteStream } from "node:fs";
 import path from "node:path";
 import { logger } from "../../handlers/logging";
+import { constants, sanitizeFilename } from "../../utils";
+import { settings } from "../../utils/settings/settings";
 import window from "../../utils/window";
-import { constants } from "../constants";
-import { settings } from "../settings/settings";
-import { sanitizeFilename } from "../utils";
 import download_events from "./events";
 import fs from "fs";
 
@@ -156,8 +155,8 @@ class DownloadItem {
     }
 
     const progressData = this.getReturnData();
-    window.emitToFrontend(download_events.progress, progressData);
+    window.emitToFrontend(download_events.status, progressData);
   }
 }
 
-export default DownloadItem;
+export { DownloadItem };

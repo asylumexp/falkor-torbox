@@ -37,8 +37,10 @@ class Window {
       icon: path.join(process.env.VITE_PUBLIC, "icon.png"),
       webPreferences: {
         preload: path.join(__dirname, "preload.mjs"),
-        devTools: !app.isPackaged,
+        // devTools: !app.isPackaged,
+        devTools: true,
       },
+      backgroundColor: "#020817",
       autoHideMenuBar: false,
       minWidth: 1000,
       minHeight: 600,
@@ -52,7 +54,7 @@ class Window {
       VITE_DEV_SERVER_URL || `file://${path.join(RENDERER_DIST, "index.html")}`;
     win.loadURL(loadURL);
 
-    if (app.isPackaged) win.setMenu(null);
+    // if (app.isPackaged) win.setMenu(null);
 
     this.setupSettings();
 
