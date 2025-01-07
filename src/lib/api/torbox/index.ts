@@ -2,7 +2,9 @@ import { getInfoHashFromMagnet } from "@/lib/utils";
 import { Torrents } from "./torrents";
 import { User } from "./user";
 import { toast } from "sonner";
+import { Webdl } from "./webdl";
 import { TorBoxTorrentInfoResult } from "@/@types/accounts";
+import { TorBoxDdlInfoResult } from "@/@types/accounts";
 
 class TorBoxClient {
   private static instance: TorBoxClient | null = null;
@@ -10,6 +12,7 @@ class TorBoxClient {
 
   public readonly user: User;
   public readonly torrents: Torrents;
+  public readonly webdl: Webdl;
 
   private constructor(apiKey: string) {
     if (!apiKey) {
@@ -20,6 +23,7 @@ class TorBoxClient {
     this.apiKey = apiKey;
     this.user = new User(apiKey);
     this.torrents = new Torrents(apiKey);
+    this.webdl = new Webdl(apiKey);
   }
 
   public static getInstance(apiKey: string): TorBoxClient {
@@ -79,12 +83,40 @@ class TorBoxClient {
     throw Error("Could not obtain download link.");
   }
 
-  public async downloadFromFileHost(
-    _url: string,
-    _password?: string
-  ): Promise<string> {
-    throw new Error("TorBox currently does not support file host downloads.");
+  private async getOrCreateWebDL(
+    url: string,
+    password?: string
+  ): Promise<TorBoxDdlInfoResult> {
+    const addedWebDL = await this.webdl.addDDL(url, password);
+    if (!addedWebDL?.hash) {
+      throw new Error("Failed to add WebDL. No Hash returned.");
+    }
+
+    const foundDownload = await this.webdl.getHashInfo(url);
+    return foundDownload!;
   }
+
+  public async downloadFromFileHost(
+    url: string,
+    password?: string
+  ): Promise<string> {
+    const downloadInfo = await this.getOrCreateWebDL(url, password);
+
+    if (!downloadInfo || !downloadInfo.download_present) {
+      toast.warning(
+        "Download has not been cached yet. Please try again later."
+      );
+      throw new Error("WebDL has not completed downloading.");
+    }
+
+    const downloadLink = await this.webdl.getZipDL(downloadInfo.id.toString());
+
+    if (downloadLink) {
+      return downloadLink;
+    }
+    throw Error("Could not obtain download link.");
+  }
+
   public async getDownloadName(url: string, type: string): Promise<string> {
     if (type != "ddl") {
       const torrentHash = getInfoHashFromMagnet(url);
@@ -94,6 +126,13 @@ class TorBoxClient {
         if (torrentInfo) {
           return `${torrentInfo.name}`;
         }
+      }
+    } else {
+      const ddl = await this.webdl.addDDL(url, "");
+      if (ddl) {
+        return this.webdl
+          .getHashInfo(ddl.hash)
+          .then((info) => (info ? info.name : ""));
       }
     }
     return "";

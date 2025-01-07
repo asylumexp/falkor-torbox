@@ -144,9 +144,27 @@ export interface TorBoxAvailableTorrentFile {
 }
 
 export interface TorBoxAddTorrent {
-  hash?: string;
-  torrent_id?: number;
-  auth_id?: string;
+  hash: string;
+  torrent_id: number;
+  auth_id: string;
+}
+
+export interface TorBoxAvailableDdl {
+  name: string;
+  size: number;
+  hash: string;
+  files?: TorBoxAvailableTorrentFile[];
+}
+
+export interface TorBoxAvailableDdlFile {
+  name: string;
+  size: number;
+}
+
+export interface TorBoxAddDdl {
+  hash: string;
+  torrent_id: number;
+  auth_id: string;
 }
 
 export interface User {
@@ -171,4 +189,39 @@ export interface User {
   additional_concurrent_slots?: number;
   long_term_seeding?: boolean;
   long_term_storage?: boolean;
+}
+
+export interface TorBoxDdlInfoResult {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  auth_id: string;
+  name: string;
+  hash: string;
+  download_state: string;
+  download_speed: number;
+  original_url: string;
+  eta: number;
+  progress: number;
+  size: number;
+  download_id: number;
+  files: TorBoxDdlInfoResultFile[];
+  active: boolean;
+  cached: boolean;
+  download_present: boolean;
+  download_finished: boolean;
+  expires_at: string | null;
+  error: string | null;
+}
+
+export interface TorBoxDdlInfoResultFile {
+  id: number;
+  md5: string | null;
+  hash: string;
+  name: string;
+  size: number;
+  s3_path: string;
+  mimetype: string;
+  short_name: string;
+  absolute_path: string;
 }
