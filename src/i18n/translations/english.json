@@ -17,6 +17,10 @@
       "developer": "Developer Settings",
       "miscellaneous": "Miscellaneous Settings"
     },
+    "plugins": {
+      "community_title": "Community Plugins",
+      "community_disclaimer": "These plugins are created and maintained by community members and are not officially affiliated with or controlled by Falkor."
+    },
     "settings": {
       "reset-igdb-cache": "Reset IGDB Cache",
       "downloads_path": "Downloads Path",
@@ -98,6 +102,7 @@
   "open_downloads_folder": "Open downloads folder",
   "star_us_on_github": "Star us on GitHub",
   "join_the_discord": "Join the Discord",
+  "start_download_message": "Start downloading a game or add a torrent to begin.",
   "update_game": "Update Game",
   "update": "Update",
   "updating": "Updating",
@@ -131,5 +136,10 @@
   "wine_prefix_folder": "Wine Prefix Folder",
   "the_path_to_your_wine_prefix_folder": "The path to your wine prefix folder",
   "import_from_igdb": "Import From IGDB",
-  "install_plugin": "Install Plugin"
+  "install_plugin": "Install Plugin",
+  "update_available": "Update Available",
+  "update_description": "A new update is available for Falkor. Do you want to update now?",
+  "update_now": "Update Now",
+  "later": "Later",
+  "changelog": "Changelog"
 }

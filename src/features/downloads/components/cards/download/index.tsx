@@ -43,6 +43,10 @@ const DownloadCard = ({ stats, deleteStats }: DownloadCardProps) => {
     downloading ? "h-60" : "h-48"
   );
 
+  useEffect(() => {
+    console.log({ game_data });
+  }, [game_data]);
+
   return (
     <div className={containerClass}>
       <div className="absolute inset-0 z-0 w-full h-full overflow-hidden">
@@ -50,12 +54,12 @@ const DownloadCard = ({ stats, deleteStats }: DownloadCardProps) => {
           <IGDBImage
             imageId={game_data.image_id}
             alt={game_data.name ?? ""}
-            className="object-cover w-full h-full relative z-[1]"
+            className="object-cover w-full h-full relative z-1"
           />
         )}
         <div
           className={cn(
-            "absolute inset-0 size-full bg-background opacity-55 z-[2]",
+            "absolute inset-0 size-full bg-background opacity-55 z-2",
             {
               "opacity-90 overflow-hidden": !downloading,
             }

@@ -1,4 +1,4 @@
-import { downloadQueue } from "../../../handlers/download";
+import { downloadQueue } from "../../../handlers/download-queue";
 import { gamesLaunched } from "../../../handlers/launcher/games_launched";
 import { settings } from "../../../utils/settings/settings";
 import window from "../../../utils/window";
@@ -9,11 +9,12 @@ const close = async (
   confirmed?: boolean
 ) => {
   try {
-    if (!window?.window) return;
+    const w = window.getWindow();
+    if (!w) return;
     const closeToTray = settings.get("closeToTray");
 
     if (closeToTray) {
-      window?.window?.hide();
+      w?.hide();
       return;
     }
 
@@ -29,7 +30,7 @@ const close = async (
       return;
     }
 
-    window?.window?.close();
+    w?.close();
   } catch (error) {
     console.error(error);
     return false;

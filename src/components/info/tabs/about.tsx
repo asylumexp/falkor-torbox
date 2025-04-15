@@ -1,13 +1,12 @@
 import { InfoItadProps, InfoProps } from "@/@types";
 import Stars from "@/components/starts";
-import { TypographyMuted } from "@/components/typography/muted";
-import { TypographySmall } from "@/components/typography/small";
 import { useLanguageContext } from "@/contexts/I18N";
 import { IGDBReturnDataType, ReleaseDate } from "@/lib/api/igdb/types";
 import { format } from "date-fns";
 import { Lightbulb } from "lucide-react";
 import { useMemo } from "react";
 import Sources from "../sources";
+import { TypographySmall, TypographyMuted } from "@/components/ui/typography";
 
 interface InfoAboutTabProps extends InfoProps {
   data: IGDBReturnDataType | undefined;
@@ -55,9 +54,9 @@ const InfoAboutTab = ({
 
   return (
     <>
-      <div className="flex flex-col flex-shrink-0 w-full gap-2 p-4 overflow-hidden h-52 rounded-2xl bg-background">
+      <div className="flex flex-col shrink-0 w-full gap-2 p-4 overflow-hidden h-52 rounded-2xl bg-background">
         <div className="flex items-center justify-between h-10 overflow-hidden">
-          <TypographySmall className="flex items-center gap-2 p-2.5 rounded-full bg-secondary/20 font-semibold flex-shrink-0 flex-grow-0">
+          <TypographySmall className="flex items-center gap-2 p-2.5 rounded-full bg-secondary/20 font-semibold shrink-0 grow-0">
             <Lightbulb fill="currentColor" size={15} />
             {t("about_this_game")}
           </TypographySmall>

@@ -1,22 +1,25 @@
 import { DownloadData, QueueData } from "@/@types";
 import { ITorrent } from "@/@types/torrent";
 import { create } from "zustand";
+import { shallow } from "zustand/shallow";
 
 interface QueueStoreState {
   queue: QueueData[];
   downloads: Array<DownloadData | ITorrent>;
   maxConcurrentDownloads: number;
-  addToQueue: (item: QueueData) => Promise<void>;
+  addToQueue: (item: QueueData) => Promise<boolean>;
   removeFromQueue: (id: string) => Promise<void>;
   fetchQueue: () => Promise<void>;
   fetchDownloads: () => Promise<void>;
-  pauseDownload: (id: string) => Promise<void>;
-  resumeDownload: (id: string) => Promise<void>;
-  stopDownload: (id: string) => Promise<void>;
+  pauseDownload: (id: string) => Promise<boolean>;
+  resumeDownload: (id: string) => Promise<boolean>;
+  stopDownload: (id: string) => Promise<boolean>;
   updateMaxConcurrentDownloads: (max: number) => Promise<void>;
+  getDownloadById: (id: string) => DownloadData | ITorrent | QueueData | undefined;
+  getActiveDownloadsCount: () => number;
 }
 
-export const useDownloadStore = create<QueueStoreState>((set, get) => {
+export const useDownloadStore = create<QueueStoreState>()((set, get) => {
   const logError = (action: string, error: unknown) => {
     console.error(`[DownloadStore] ${action} failed:`, error);
   };
@@ -25,16 +28,70 @@ export const useDownloadStore = create<QueueStoreState>((set, get) => {
     key: T,
     value: QueueStoreState[T]
   ) => {
-    set((state) => ({
-      ...state,
-      [key]: value,
-    }));
+    set((state) => {
+      if (shallow(state[key], value)) return state;
+      return {
+        ...state,
+        [key]: value,
+      };
+    });
   };
+
+  // Setup event listeners
+  const setupEventListeners = () => {
+    const listeners = [
+      { event: "download:start", handler: async () => {
+        await Promise.all([get().fetchDownloads(), get().fetchQueue()]);
+      }},
+      { event: "queue:remove", handler: async () => {
+        await get().fetchQueue();
+      }},
+      { event: "download:status", handler: async () => {
+        await get().fetchDownloads();
+      }},
+      { event: "torrent:status", handler: async () => {
+        await get().fetchDownloads();
+      }}
+    ];
+
+    // Register all listeners
+    listeners.forEach(({ event, handler }) => {
+      window.ipcRenderer.on(event, handler);
+    });
+
+    // Return cleanup function
+    return () => {
+      listeners.forEach(({ event, handler }) => {
+        window.ipcRenderer.off(event, handler);
+      });
+    };
+  };
+
+  // Initialize event listeners
+  const cleanup = setupEventListeners();
 
   return {
     queue: [],
     downloads: [],
     maxConcurrentDownloads: 1,
+    cleanup,
+    
+    getDownloadById: (id: string) => {
+      const { downloads, queue } = get();
+      return [...downloads, ...queue].find(item => {
+        if ('type' in item) {
+          return item.type === 'torrent' ? item.data.torrentId === id : item.data.id === id;
+        }
+        return 'infoHash' in item ? item.infoHash === id : item.id === id;
+      });
+    },
+    
+    getActiveDownloadsCount: () => {
+      const { downloads } = get();
+      return downloads.filter(d => 
+        d.status !== 'completed' && d.status !== 'failed' && d.status !== 'stopped'
+      ).length;
+    },
 
     fetchQueue: async () => {
       try {
@@ -66,12 +123,15 @@ export const useDownloadStore = create<QueueStoreState>((set, get) => {
       try {
         const response = await window.ipcRenderer.invoke("queue:add", item);
         if (response.success) {
-          Promise.all([await get().fetchDownloads(), await get().fetchQueue()]);
+          await Promise.all([get().fetchDownloads(), get().fetchQueue()]);
+          return true;
         } else {
           logError("Adding to queue", response.error);
+          return false;
         }
       } catch (error) {
         logError("Adding to queue", error);
+        return false;
       }
     },
 
@@ -93,11 +153,14 @@ export const useDownloadStore = create<QueueStoreState>((set, get) => {
         const response = await window.ipcRenderer.invoke("queue:pause", id);
         if (response.success) {
           await get().fetchDownloads();
+          return true;
         } else {
           logError("Pausing download", response.error);
+          return false;
         }
       } catch (error) {
         logError("Pausing download", error);
+        return false;
       }
     },
 
@@ -106,11 +169,14 @@ export const useDownloadStore = create<QueueStoreState>((set, get) => {
         const response = await window.ipcRenderer.invoke("queue:resume", id);
         if (response.success) {
           await get().fetchDownloads();
+          return true;
         } else {
           logError("Resuming download", response.error);
+          return false;
         }
       } catch (error) {
         logError("Resuming download", error);
+        return false;
       }
     },
 
@@ -119,11 +185,14 @@ export const useDownloadStore = create<QueueStoreState>((set, get) => {
         const response = await window.ipcRenderer.invoke("queue:stop", id);
         if (response.success) {
           await get().fetchDownloads();
+          return true;
         } else {
           logError("Stopping download", response.error);
+          return false;
         }
       } catch (error) {
         logError("Stopping download", error);
+        return false;
       }
     },
 

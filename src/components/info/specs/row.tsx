@@ -1,7 +1,10 @@
 import { Data } from "@/components/info/specs";
-import { H4 } from "@/components/typography/h4";
-import { TypographyMuted } from "@/components/typography/muted";
-import { TypographySmall } from "@/components/typography/small";
+import {
+  H4,
+  TypographyMuted,
+  TypographySmall,
+} from "@/components/ui/typography";
+
 import { useLanguageContext } from "@/contexts/I18N";
 import { scrapeOptions } from "@/lib";
 import { useMemo } from "react";
@@ -18,7 +21,7 @@ const RequirementsRow = ({ type, data }: RequirementsRowProps) => {
   if (!isSpecsEm) return null;
 
   return (
-    <div className="flex flex-col flex-shrink-0 w-full gap-2 p-4 overflow-hidden rounded-2xl bg-background">
+    <div className="flex flex-col shrink-0 w-full gap-2 p-4 overflow-hidden rounded-2xl bg-background">
       <H4 className="p-4 pt-1 pb-2 capitalize">{t(type?.toLowerCase())}</H4>
 
       {Object.entries(specs).map(([key, value]) => (

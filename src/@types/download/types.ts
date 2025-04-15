@@ -13,11 +13,13 @@ export interface DownloadData {
 
 export type DownloadStatus =
   | "pending"
+  | "queued"
   | "downloading"
   | "completed"
   | "error"
   | "paused"
-  | "stopped";
+  | "stopped"
+  | "failed";
 
 export interface AddDownloadData {
   id: string;
@@ -37,15 +39,9 @@ export type DownloadgameData = {
 
 export type QueueDataTorrent = {
   type: "torrent";
-  data: {
-    torrentId: string;
-    game_data: DownloadgameData;
-  };
+  data: { torrentId: string; url?: string; game_data: DownloadgameData };
 };
 
-export type QueueDataDownload = {
-  type: "download";
-  data: AddDownloadData;
-};
+export type QueueDataDownload = { type: "download"; data: AddDownloadData };
 
 export type QueueData = QueueDataTorrent | QueueDataDownload;

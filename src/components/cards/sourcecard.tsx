@@ -1,4 +1,4 @@
-import { DownloadgameData, PluginSearchResponse } from "@/@types";
+import { DownloadgameData } from "@/@types";
 import { useLanguageContext } from "@/contexts/I18N";
 import UseDownloads from "@/features/downloads/hooks/useDownloads";
 import { useSettings } from "@/hooks";
@@ -8,10 +8,10 @@ import { useAccountServices } from "@/stores/account-services";
 import { CloudDownload, ShoppingCart } from "lucide-react";
 import { useCallback } from "react";
 import { sanitizeFilename } from "../../lib/utils";
-import { H3 } from "../typography/h3";
-import { P } from "../typography/p";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
+import { H3, P } from "../ui/typography";
+import { PluginSearchResponse } from "@team-falkor/shared-types";
 
 type SourceCardProps = {
   source: PluginSearchResponse | Deal;
@@ -150,7 +150,7 @@ export const SourceCard = ({ source, ...props }: SourceCardProps) => {
               <CloudDownload
                 size={18}
                 fill="currentColor"
-                className="flex-shrink-0"
+                className="shrink-0"
               />
               <P className="max-w-full capitalize truncate">
                 {source?.uploader ?? t("download")}
